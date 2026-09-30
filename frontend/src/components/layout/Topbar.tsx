@@ -1,12 +1,28 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-export const Topbar: React.FC = () => {
+interface TopbarProps {
+  isCollapsed: boolean;
+  toggleSidebar: () => void;
+}
+
+export const Topbar: React.FC<TopbarProps> = ({ isCollapsed, toggleSidebar }) => {
   const { user, logout } = useAuth();
 
   return (
-    <header className="h-20 bg-white/90 backdrop-blur-md border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10 shadow-xs">
-      <div className="flex items-center gap-3">
+    <header className="h-20 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-10 shadow-xs">
+      <div className="flex items-center gap-4">
+        {/* Sidebar Toggle Button */}
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 shadow-xs transition"
+          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+          </svg>
+        </button>
+
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           <span className="text-xs font-bold text-slate-700">Production Node</span>
@@ -15,10 +31,10 @@ export const Topbar: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-4 sm:gap-5">
         {/* User Badge */}
         <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 pl-3.5 pr-2 py-1.5 rounded-xl">
-          <div className="text-right">
+          <div className="text-right hidden sm:block">
             <div className="text-xs font-bold text-slate-900 leading-tight">{user?.email}</div>
             <div className="text-[11px] text-blue-600 font-semibold">{user?.company?.name}</div>
           </div>
