@@ -129,7 +129,8 @@ export const CreateInvoicePage: React.FC = () => {
     }
   };
 
-  const fillDemoData = () => {
+  const fillValidData = () => {
+    setInvoiceNumber(`INV-${Math.floor(10000 + Math.random() * 90000)}`);
     setCustomerName('Cebu Port Logistics & Terminal Corp');
     setCustomerTaxId('998-776-554');
     setCustomerEmail('billing@cebuportlogistics.ph');
@@ -137,6 +138,26 @@ export const CreateInvoicePage: React.FC = () => {
       { description: 'High-Tensile Structural Steel I-Beam 6m', quantity: 25, unit_price: 3850, tax: 12 },
       { description: 'Industrial Grade Epoxy Primer 20L', quantity: 6, unit_price: 4200, tax: 12 },
       { description: 'Forklift Loading & Heavy Transport Freight', quantity: 1, unit_price: 5500, tax: 12 },
+    ]);
+  };
+
+  const fillRetryScenario = () => {
+    setInvoiceNumber(`INV-${Math.floor(10000 + Math.random() * 90000)}`);
+    setCustomerName('Metro Infrastructure [503]');
+    setCustomerTaxId('555-444-333');
+    setCustomerEmail('finance@metroinfra.ph');
+    setItems([
+      { description: 'Heavy Grade Industrial Transformers', quantity: 2, unit_price: 45000, tax: 12 },
+    ]);
+  };
+
+  const fillRejectScenario = () => {
+    setInvoiceNumber(`INV-${Math.floor(10000 + Math.random() * 90000)}`);
+    setCustomerName('Unregistered Firm [REJECT]');
+    setCustomerTaxId('000-000-000');
+    setCustomerEmail('invalid@unregistered.ph');
+    setItems([
+      { description: 'Standard Commercial Consulting Service', quantity: 1, unit_price: 15000, tax: 12 },
     ]);
   };
 
@@ -153,13 +174,32 @@ export const CreateInvoicePage: React.FC = () => {
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Issue Electronic Invoice</h1>
           </div>
-          <button
-            type="button"
-            onClick={fillDemoData}
-            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-xs font-bold text-blue-700 border border-slate-200 shadow-xs transition flex items-center gap-2 self-start sm:self-auto"
-          >
-            <span>⚡ Fill Sample Invoice</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={fillValidData}
+              className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-700 border border-blue-200 shadow-xs transition flex items-center gap-1.5"
+              title="Fills a valid invoice that receives 200 OK SUBMITTED clearance"
+            >
+              <span>⚡ Fill Standard Invoice</span>
+            </button>
+            <button
+              type="button"
+              onClick={fillRetryScenario}
+              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-xs font-bold text-amber-700 border border-amber-200 shadow-xs transition flex items-center gap-1.5"
+              title="Fills an invoice that simulates Gov 503 Outage to test auto-retries"
+            >
+              <span>⚠️ Test 503 Outage</span>
+            </button>
+            <button
+              type="button"
+              onClick={fillRejectScenario}
+              className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-xs font-bold text-rose-700 border border-rose-200 shadow-xs transition flex items-center gap-1.5"
+              title="Fills an invoice that simulates Gov 400 Invalid TIN to test permanent rejection"
+            >
+              <span>❌ Test 400 Reject</span>
+            </button>
+          </div>
         </div>
 
         {/* Error Alert */}

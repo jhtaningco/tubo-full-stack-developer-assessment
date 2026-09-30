@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status
 from django.utils import timezone
 
-# Cache for idempotency keys: maps idempotency_key -> stored response data
+# In-memory cache for idempotency keys: maps idempotency_key -> stored response data
 PROCESSED_IDEMPOTENCY_KEYS = {}
 
 
@@ -16,18 +16,19 @@ class MockGovInvoiceView(APIView):
     Mock Government E-Invoicing Tax Authority API.
     Endpoint: POST /mock-gov/invoices/
 
-    Simulates realistic external government portal behaviors:
-    - Idempotency support via `Idempotency-Key` header
-    - Success (200 OK) ~ 60%
-    - Temporary Failure (503 Service Unavailable) ~ 15%
-    - Validation Error (400 Bad Request) ~ 15%
-    - Gateway Timeout / Slow Response (504) ~ 10%
-    - Support for `X-Mock-Force-Status` header for deterministic testing
+    Simulates external government tax authority behaviors:
+    - Idempotency support: replaying same `Idempotency-Key` returns original success reference
+    - Explicit test triggers in customer name:
+        * Contains '[FAIL]' or '[503]' -> Returns 503 Temporary Outage (triggers retry flow)
+        * Contains '[REJECT]' or '[400]' -> Returns 400 Validation Rejection
+        * Contains '[TIMEOUT]' -> Simulates Gateway Timeout
+    - Standard invoices succeed (200 OK) with realistic clearance reference IDs
+    - Support for `X-Mock-Force-Status` HTTP header for automated tests
     """
     permission_classes = [AllowAny]
 
     def post(self, request):
-        # Extract Idempotency Key
+        # 1. Extract Idempotency Key
         idempotency_key = (
             request.headers.get('Idempotency-Key') or
             request.META.get('HTTP_IDEMPOTENCY_KEY') or
@@ -45,28 +46,19 @@ class MockGovInvoiceView(APIView):
                 status=status.HTTP_200_OK
             )
 
-        # Allow forced status for deterministic tests
+        # 2. Header-based forced status (for automated integration tests)
         force_status = request.headers.get('X-Mock-Force-Status')
         if force_status:
             if force_status == '200':
-                ref = f"BIR-EINV-{uuid.uuid4().hex[:12].upper()}"
-                res_data = {
-                    'status': 'ACCEPTED',
-                    'government_reference_id': ref,
-                    'submitted_at': timezone.now().isoformat(),
-                    'message': 'Invoice registered and validated by Government Authority.',
-                }
-                if idempotency_key:
-                    PROCESSED_IDEMPOTENCY_KEYS[idempotency_key] = res_data
-                return Response(res_data, status=status.HTTP_200_OK)
+                return self._respond_success(idempotency_key)
             elif force_status == '503':
                 return Response(
-                    {'error': 'Government Tax Portal is temporarily undergoing maintenance (503).'},
+                    {'error': 'Government Tax Portal is temporarily undergoing maintenance (503 Service Unavailable).'},
                     status=status.HTTP_503_SERVICE_UNAVAILABLE
                 )
             elif force_status == '400':
                 return Response(
-                    {'error': 'Invalid invoice: Customer TIN format rejected by tax registry.'},
+                    {'error': 'Validation rejection: Customer TIN format rejected by tax registry.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             elif force_status in ('timeout', '504'):
@@ -76,40 +68,54 @@ class MockGovInvoiceView(APIView):
                     status=status.HTTP_504_GATEWAY_TIMEOUT
                 )
 
-        # Probabilistic response simulation
-        roll = random.random()
+        # 3. Payload-based test triggers (allows user to easily test different failure/retry scenarios from the UI!)
+        customer_info = request.data.get('customer', {})
+        customer_name = customer_info.get('name', '') if isinstance(customer_info, dict) else ''
+        invoice_number = request.data.get('invoice_number', '')
 
-        if roll < 0.60:
-            # 60% - Success
-            ref = f"BIR-EINV-{uuid.uuid4().hex[:12].upper()}"
-            res_data = {
-                'status': 'ACCEPTED',
-                'government_reference_id': ref,
-                'submitted_at': timezone.now().isoformat(),
-                'message': 'Invoice registered and validated by Government Authority.',
-            }
-            if idempotency_key:
-                PROCESSED_IDEMPOTENCY_KEYS[idempotency_key] = res_data
-            return Response(res_data, status=status.HTTP_200_OK)
+        test_string = f"{customer_name} {invoice_number}".upper()
 
-        elif roll < 0.75:
-            # 15% - Temporary 503
+        if '[FAIL]' in test_string or '[503]' in test_string:
             return Response(
-                {'error': 'Government Tax Portal is temporarily undergoing maintenance (503 Service Unavailable).'},
+                {'error': 'Government Tax Portal is temporarily undergoing maintenance (503 Service Unavailable). Retry scheduled.'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        elif roll < 0.90:
-            # 15% - Invalid Invoice 400
+        if '[REJECT]' in test_string or '[400]' in test_string:
             return Response(
-                {'error': 'Validation rejection: Invalid customer tax ID format or line-item tax calculation mismatch.'},
+                {'error': 'Validation rejection: Customer TIN is invalid or not registered in National Tax Registry.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        else:
-            # 10% - Timeout simulation
+        if '[TIMEOUT]' in test_string:
             time.sleep(2)
             return Response(
                 {'error': 'Government Tax Portal Gateway Timeout (504).'},
                 status=status.HTTP_504_GATEWAY_TIMEOUT
             )
+
+        # 4. Realistic Default Processing:
+        # Standard valid submissions succeed (200 OK) with 90% probability,
+        # with occasional 10% transient 503 to showcase auto-retry resilience.
+        roll = random.random()
+
+        if roll < 0.90:
+            return self._respond_success(idempotency_key)
+        else:
+            # 10% - Transient 503 (automatically recovered by Celery worker retry)
+            return Response(
+                {'error': 'Government Tax Portal is temporarily undergoing maintenance (503 Service Unavailable).'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+    def _respond_success(self, idempotency_key):
+        ref = f"BIR-EINV-{uuid.uuid4().hex[:12].upper()}"
+        res_data = {
+            'status': 'ACCEPTED',
+            'government_reference_id': ref,
+            'submitted_at': timezone.now().isoformat(),
+            'message': 'Invoice registered and tax clearance certified by Government Tax Authority.',
+        }
+        if idempotency_key:
+            PROCESSED_IDEMPOTENCY_KEYS[idempotency_key] = res_data
+        return Response(res_data, status=status.HTTP_200_OK)
