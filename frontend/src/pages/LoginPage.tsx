@@ -12,7 +12,7 @@ interface AuthResponse {
   };
 }
 
-function LoginPage() {
+export const LoginPage: React.FC = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -47,7 +47,7 @@ function LoginPage() {
     } catch (err: any) {
       const detail = err.response?.data?.detail ||
                      (typeof err.response?.data === 'object' ? JSON.stringify(err.response.data) : null) ||
-                     'Failed to login. Please check your credentials.';
+                     'Failed to sign in. Please verify your email and password.';
       setErrorMessage(detail);
     } finally {
       setLoading(false);
@@ -95,34 +95,42 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen bg-[#070A11] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Ambient background glow effects */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-indigo-600/15 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         {/* Brand Header */}
-        <div className="flex justify-center items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-            <span className="text-white font-black text-xl tracking-wider">T</span>
+        <div className="flex flex-col items-center text-center">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-xl shadow-indigo-600/30 ring-1 ring-white/20 mb-4">
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
           </div>
-          <span className="text-2xl font-bold text-white tracking-tight">TUBO</span>
-          <span className="px-2 py-0.5 text-xs font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">
-            E-Invoicing
-          </span>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">TUBO</h1>
+            <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/30">
+              Compliance Platform
+            </span>
+          </div>
+          <p className="mt-2 text-xs text-slate-400 font-medium max-w-sm">
+            Automated Electronic Invoicing & Government Tax Clearance Gateway
+          </p>
         </div>
-        <h2 className="mt-4 text-center text-xl font-medium text-slate-300">
-          Electronic Invoicing & Government Compliance
-        </h2>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-        <div className="bg-slate-800 py-8 px-6 shadow-2xl border border-slate-700 sm:rounded-2xl sm:px-10">
-          {/* Tabs */}
-          <div className="flex border-b border-slate-700 mb-6">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg relative z-10">
+        <div className="bg-[#0B0F19]/90 backdrop-blur-2xl py-8 px-6 shadow-2xl border border-white/[0.08] sm:rounded-3xl sm:px-10">
+          {/* Segmented Tab Switcher */}
+          <div className="p-1 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex mb-6">
             <button
               type="button"
               onClick={() => { setIsRegister(false); setErrorMessage(null); }}
-              className={`flex-1 pb-3 text-sm font-semibold transition-colors text-center border-b-2 ${
+              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
                 !isRegister
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               Sign In
@@ -130,32 +138,32 @@ function LoginPage() {
             <button
               type="button"
               onClick={() => { setIsRegister(true); setErrorMessage(null); }}
-              className={`flex-1 pb-3 text-sm font-semibold transition-colors text-center border-b-2 ${
+              className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
                 isRegister
-                  ? 'border-indigo-500 text-indigo-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'text-slate-400 hover:text-white'
               }`}
             >
               Register Company
             </button>
           </div>
 
-          {/* Error Alert */}
+          {/* Error Banner */}
           {errorMessage && (
-            <div className="mb-6 p-4 rounded-xl bg-red-900/30 border border-red-500/40 text-red-200 text-sm flex items-start space-x-2">
-              <svg className="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3 animate-fadeIn">
+              <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <span>{errorMessage}</span>
+              <span className="leading-relaxed">{errorMessage}</span>
             </div>
           )}
 
           {!isRegister ? (
-            /* Login Form */
-            <form onSubmit={handleLogin} className="space-y-5">
+            /* Sign In Form */
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                  Work Email Address
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                  Corporate Work Email
                 </label>
                 <input
                   type="email"
@@ -163,12 +171,12 @@ function LoginPage() {
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  className="w-full px-4 py-3 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-xs font-medium transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
                   Password
                 </label>
                 <input
@@ -177,43 +185,47 @@ function LoginPage() {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  className="w-full px-4 py-3 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-xs font-medium transition"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-lg shadow-lg shadow-indigo-600/30 transition duration-150 flex justify-center items-center text-sm"
+                className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-50 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition duration-150 flex justify-center items-center text-xs tracking-wide ring-1 ring-white/20 mt-2"
               >
                 {loading ? (
                   <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                 ) : null}
-                Sign In to Tubo
+                Sign In to Console
               </button>
 
-              {/* Demo Account Quick-Fill */}
-              <div className="pt-3 border-t border-slate-700/60">
+              {/* Seeded Demo Account Quick Access */}
+              <div className="pt-4 border-t border-white/[0.06] mt-4">
                 <button
                   type="button"
                   onClick={fillDemoAccount}
-                  className="w-full py-2 px-3 bg-slate-700/60 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition border border-slate-600 flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 px-3.5 bg-white/[0.03] hover:bg-white/[0.06] text-slate-300 text-xs rounded-xl transition border border-white/[0.08] flex items-center justify-between group"
                 >
-                  <span>⚡ Use Seeded Demo Account</span>
-                  <span className="text-slate-400 font-mono">(maria@abchardware.ph)</span>
+                  <span className="flex items-center gap-2 text-indigo-400 font-semibold">
+                    <span>⚡ Fill Seeded Account</span>
+                  </span>
+                  <span className="text-slate-400 font-mono text-[11px] group-hover:text-slate-200">
+                    maria@abchardware.ph
+                  </span>
                 </button>
               </div>
             </form>
           ) : (
-            /* Register Form */
+            /* Registration Form */
             <form onSubmit={handleRegister} className="space-y-4">
-              <div className="text-xs font-bold uppercase tracking-wider text-indigo-400 pb-1 border-b border-slate-700">
-                1. Company Details
+              <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 pb-1 border-b border-white/[0.06]">
+                1. Company & Tax Identity
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                     Company Legal Name
                   </label>
                   <input
@@ -222,12 +234,12 @@ function LoginPage() {
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="e.g. ABC Hardware Store"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="w-full px-3.5 py-2.5 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Tax ID / TIN
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Company TIN / Tax ID
                   </label>
                   <input
                     type="text"
@@ -235,14 +247,14 @@ function LoginPage() {
                     value={companyTaxId}
                     onChange={(e) => setCompanyTaxId(e.target.value)}
                     placeholder="e.g. 123-456-789"
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="w-full px-3.5 py-2.5 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Company Official Email
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                  Official Company Email
                 </label>
                 <input
                   type="email"
@@ -250,17 +262,17 @@ function LoginPage() {
                   value={companyEmail}
                   onChange={(e) => setCompanyEmail(e.target.value)}
                   placeholder="billing@abchardware.ph"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  className="w-full px-3.5 py-2.5 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium"
                 />
               </div>
 
-              <div className="text-xs font-bold uppercase tracking-wider text-indigo-400 pt-2 pb-1 border-b border-slate-700">
-                2. User Account
+              <div className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 pt-2 pb-1 border-b border-white/[0.06]">
+                2. User Account (Administrator)
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  User Email (Login ID)
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                  Your Work Email
                 </label>
                 <input
                   type="email"
@@ -268,12 +280,12 @@ function LoginPage() {
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="maria@abchardware.ph"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  className="w-full px-3.5 py-2.5 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">
                   Password (min 6 characters)
                 </label>
                 <input
@@ -283,26 +295,43 @@ function LoginPage() {
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  className="w-full px-3.5 py-2.5 bg-[#070A11] border border-white/[0.08] rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold rounded-lg shadow-lg shadow-indigo-600/30 transition duration-150 flex justify-center items-center text-sm"
+                className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-50 text-white font-semibold rounded-xl shadow-lg shadow-indigo-600/30 transition duration-150 flex justify-center items-center text-xs tracking-wide ring-1 ring-white/20 mt-2"
               >
                 {loading ? (
                   <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                 ) : null}
-                Create Account & Register Company
+                Register Company & Launch
               </button>
             </form>
           )}
         </div>
+
+        {/* Security & Regulatory Footer */}
+        <div className="mt-8 flex items-center justify-center gap-6 text-[11px] text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span>256-Bit TLS Encryption</span>
+          </div>
+          <span>•</span>
+          <div className="flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 011-1h2a1 1 0 110 2h-2a1 1 0 01-1-1zm-6 4a1 1 0 011-1h6a1 1 0 110 2H6a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>E-Invoice Compliance Standard</span>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default LoginPage;

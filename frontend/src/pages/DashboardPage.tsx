@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import StatusBadge from '../components/ui/StatusBadge';
 import api from '../lib/api';
-import { Invoice, InvoiceStatus, PaginatedResponse } from '../types';
+import { Invoice, PaginatedResponse } from '../types';
 
 interface StatsResponse {
   total: number;
@@ -33,6 +33,7 @@ export const DashboardPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [lastSync, setLastSync] = useState<string>('Just now');
 
   const fetchStats = async () => {
     try {
@@ -56,6 +57,7 @@ export const DashboardPage: React.FC = () => {
       setInvoices(res.data.results);
       setTotalCount(res.data.count);
       setTotalPages(Math.ceil(res.data.count / 10) || 1);
+      setLastSync(new Date().toLocaleTimeString());
     } catch (err) {
       console.error('Failed to fetch invoices', err);
     } finally {
@@ -71,7 +73,7 @@ export const DashboardPage: React.FC = () => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  // Poll for background status changes every 5 seconds
+  // Polling every 5 seconds for live background queue updates
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStats();
@@ -82,124 +84,162 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-white/[0.06]">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Invoice Dashboard</h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Manage your company invoices and track electronic government tax submissions in real time.
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Electronic Invoicing</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-xs text-slate-400 font-mono">Live Synced: {lastSync}</span>
+            </div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">Invoice Operations Console</h1>
           </div>
-          <Link
-            to="/invoices/new"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold shadow-lg shadow-indigo-600/30 transition self-start sm:self-auto"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Create Invoice</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { fetchStats(); fetchInvoices(); }}
+              className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] text-slate-300 hover:text-white transition"
+              title="Refresh Invoices"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <Link
+              to="/invoices/new"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition ring-1 ring-white/20"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Issue New Invoice</span>
+            </Link>
+          </div>
         </div>
 
-        {/* TailAdmin Stat Cards */}
+        {/* Executive Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Invoices */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Invoices</div>
-              <div className="text-2xl font-bold text-white mt-1">{stats.total}</div>
+          <div className="p-5 rounded-2xl bg-[#0B0F19] border border-white/[0.07] shadow-card hover:border-white/[0.14] transition-all relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Volume</div>
+                <div className="text-3xl font-extrabold text-white mt-1.5 font-mono">{stats.total}</div>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-indigo-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Submitted */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Gov Submitted</div>
-              <div className="text-2xl font-bold text-white mt-1">{stats.submitted}</div>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500">
+              <span className="text-indigo-400 font-semibold font-mono">100%</span>
+              <span>All company invoices</span>
             </div>
           </div>
 
-          {/* Pending / Processing */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider">In Queue / Processing</div>
-              <div className="text-2xl font-bold text-white mt-1">{stats.pending + stats.processing}</div>
+          {/* Gov Submitted */}
+          <div className="p-5 rounded-2xl bg-[#0B0F19] border border-emerald-500/20 shadow-card hover:border-emerald-500/30 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Gov Clearance OK</div>
+                <div className="text-3xl font-extrabold text-white mt-1.5 font-mono">{stats.submitted}</div>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-emerald-400/80 font-medium">
+              <span>● Tax clearance registered</span>
+            </div>
+          </div>
+
+          {/* In Queue / Processing */}
+          <div className="p-5 rounded-2xl bg-[#0B0F19] border border-amber-500/20 shadow-card hover:border-amber-500/30 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">In Worker Queue</div>
+                <div className="text-3xl font-extrabold text-white mt-1.5 font-mono">{stats.pending + stats.processing}</div>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-amber-400/80 font-medium">
+              <span>● Async Celery submission</span>
             </div>
           </div>
 
           {/* Failed / Rejected */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-rose-400 uppercase tracking-wider">Failed / Rejected</div>
-              <div className="text-2xl font-bold text-white mt-1">{stats.failed + stats.rejected}</div>
+          <div className="p-5 rounded-2xl bg-[#0B0F19] border border-rose-500/20 shadow-card hover:border-rose-500/30 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-all pointer-events-none" />
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-bold text-rose-400 uppercase tracking-wider">Attention Needed</div>
+                <div className="text-3xl font-extrabold text-white mt-1.5 font-mono">{stats.failed + stats.rejected}</div>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-rose-400/80 font-medium">
+              <span>● Manual retry available</span>
             </div>
           </div>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        {/* Filter Toolbar */}
+        <div className="p-4 rounded-2xl bg-[#0B0F19] border border-white/[0.07] flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between shadow-sm">
           <div className="flex-1 flex flex-col sm:flex-row gap-3">
-            {/* Search Input */}
+            {/* Search */}
             <div className="relative flex-1">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </span>
               <input
                 type="text"
-                placeholder="Search invoice number, customer name, TIN..."
+                placeholder="Search invoice number, buyer TIN, customer name..."
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setPage(1);
                 }}
-                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 bg-[#070A11] border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               />
             </div>
 
-            {/* Status Dropdown */}
-            <div className="w-full sm:w-44">
+            {/* Status Select */}
+            <div className="w-full sm:w-48">
               <select
                 value={selectedStatus}
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2 bg-[#070A11] border border-white/[0.08] rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">All Statuses</option>
                 <option value="SUBMITTED">Submitted</option>
-                <option value="PENDING">Pending</option>
+                <option value="PENDING">Queued / Pending</option>
                 <option value="PROCESSING">Processing</option>
                 <option value="FAILED">Failed</option>
                 <option value="REJECTED">Rejected</option>
               </select>
             </div>
 
-            {/* Date Filter */}
-            <div className="w-full sm:w-40">
+            {/* Date Picker */}
+            <div className="w-full sm:w-44">
               <input
                 type="date"
                 value={selectedDate}
@@ -207,7 +247,7 @@ export const DashboardPage: React.FC = () => {
                   setSelectedDate(e.target.value);
                   setPage(1);
                 }}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3.5 py-2 bg-[#070A11] border border-white/[0.08] rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           </div>
@@ -222,54 +262,54 @@ export const DashboardPage: React.FC = () => {
               }}
               className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold px-2 py-1 transition whitespace-nowrap"
             >
-              Clear Filters
+              Reset Filters
             </button>
           )}
         </div>
 
-        {/* Invoices Table */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 shadow-sm overflow-hidden">
+        {/* Invoices Table Card */}
+        <div className="rounded-2xl bg-[#0B0F19] border border-white/[0.07] shadow-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-800/60 border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider">
-                  <th className="py-3.5 px-4 sm:px-6">Invoice Number</th>
-                  <th className="py-3.5 px-4">Customer</th>
-                  <th className="py-3.5 px-4">Invoice Date</th>
-                  <th className="py-3.5 px-4">Items</th>
-                  <th className="py-3.5 px-4 text-right">Total Amount</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 sm:px-6 text-right">Action</th>
+                <tr className="bg-white/[0.02] border-b border-white/[0.06] text-slate-400 font-bold uppercase tracking-wider">
+                  <th className="py-4 px-6">Invoice #</th>
+                  <th className="py-4 px-5">Customer & TIN</th>
+                  <th className="py-4 px-5">Date</th>
+                  <th className="py-4 px-4 text-center">Items</th>
+                  <th className="py-4 px-5 text-right">Gross Total</th>
+                  <th className="py-4 px-5">Gov Status</th>
+                  <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-white/[0.04]">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-500">
-                      <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2" />
-                      <div>Loading invoices...</div>
+                    <td colSpan={7} className="py-16 text-center text-slate-500">
+                      <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
+                      <div className="text-xs font-medium">Fetching real-time invoices...</div>
                     </td>
                   </tr>
                 ) : invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400">
-                      <div className="w-12 h-12 rounded-full bg-slate-800/80 mx-auto flex items-center justify-center text-slate-500 mb-3">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <td colSpan={7} className="py-16 text-center text-slate-400">
+                      <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.06] mx-auto flex items-center justify-center text-slate-500 mb-3">
+                        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <div className="font-semibold text-white">No invoices found</div>
-                      <div className="text-xs text-slate-500 mt-1">
+                      <div className="font-bold text-white text-sm">No invoices found</div>
+                      <div className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                         {searchQuery || selectedStatus || selectedDate
-                          ? 'Try adjusting your filters or search terms.'
-                          : 'Get started by creating your first electronic invoice.'}
+                          ? 'No matching records for current filter parameters.'
+                          : 'You haven’t issued any electronic invoices yet.'}
                       </div>
-                      <div className="mt-4">
+                      <div className="mt-5">
                         <Link
                           to="/invoices/new"
-                          className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition inline-block"
+                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition inline-block shadow-md shadow-indigo-600/30"
                         >
-                          Create Invoice
+                          Issue New Invoice
                         </Link>
                       </div>
                     </td>
@@ -278,35 +318,42 @@ export const DashboardPage: React.FC = () => {
                   invoices.map((inv) => (
                     <tr
                       key={inv.id}
-                      className="hover:bg-slate-800/40 transition-colors group"
+                      className="hover:bg-white/[0.02] transition-colors group"
                     >
-                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-indigo-400 group-hover:text-indigo-300">
-                        <Link to={`/invoices/${inv.id}`} className="hover:underline flex items-center gap-1.5 font-mono">
+                      <td className="py-4 px-6 font-semibold">
+                        <Link
+                          to={`/invoices/${inv.id}`}
+                          className="font-mono text-indigo-400 group-hover:text-indigo-300 hover:underline flex items-center gap-1.5"
+                        >
                           {inv.invoice_number}
                         </Link>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-medium text-white truncate max-w-[180px]">{inv.customer_name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">TIN: {inv.customer_tax_id}</div>
+                      <td className="py-4 px-5">
+                        <div className="font-semibold text-white truncate max-w-[200px]">{inv.customer_name}</div>
+                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">TIN: {inv.customer_tax_id}</div>
                       </td>
-                      <td className="py-3.5 px-4 text-slate-300 whitespace-nowrap">
+                      <td className="py-4 px-5 text-slate-300 font-mono whitespace-nowrap">
                         {inv.invoice_date}
                       </td>
-                      <td className="py-3.5 px-4 text-slate-400">
-                        {inv.items?.length || 0} line(s)
+                      <td className="py-4 px-4 text-center text-slate-400 font-mono">
+                        {inv.items?.length || 0}
                       </td>
-                      <td className="py-3.5 px-4 text-right font-semibold text-white font-mono">
-                        {inv.currency} {Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <td className="py-4 px-5 text-right font-bold text-white font-mono whitespace-nowrap">
+                        <span className="text-xs text-slate-400 font-sans mr-1">{inv.currency}</span>
+                        {Number(inv.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                      <td className="py-4 px-5 whitespace-nowrap">
                         <StatusBadge status={inv.status} />
                       </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-right whitespace-nowrap">
+                      <td className="py-4 px-6 text-right whitespace-nowrap">
                         <Link
                           to={`/invoices/${inv.id}`}
-                          className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium text-xs transition inline-block border border-slate-700"
+                          className="px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white font-semibold text-xs transition inline-flex items-center gap-1 border border-white/[0.08]"
                         >
-                          View Details
+                          <span>Review</span>
+                          <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </Link>
                       </td>
                     </tr>
@@ -318,23 +365,23 @@ export const DashboardPage: React.FC = () => {
 
           {/* Pagination Footer */}
           {totalPages > 1 && (
-            <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div className="p-4 bg-white/[0.02] border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400">
               <div>
-                Showing page <span className="font-semibold text-white">{page}</span> of{' '}
-                <span className="font-semibold text-white">{totalPages}</span> ({totalCount} total)
+                Page <span className="font-bold text-white font-mono">{page}</span> of{' '}
+                <span className="font-bold text-white font-mono">{totalPages}</span> ({totalCount} records)
               </div>
               <div className="flex items-center gap-2">
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-medium transition border border-slate-700"
+                  className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-30 text-white font-semibold transition border border-white/[0.08]"
                 >
                   Previous
                 </button>
                 <button
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-medium transition border border-slate-700"
+                  className="px-3.5 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-30 text-white font-semibold transition border border-white/[0.08]"
                 >
                   Next
                 </button>
