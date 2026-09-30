@@ -44,8 +44,10 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const fetchInvoices = useCallback(async () => {
-    setLoading(true);
+  const fetchInvoices = useCallback(async (isSilent = false) => {
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       const params = new URLSearchParams();
       params.append('page', page.toString());
@@ -61,7 +63,9 @@ export const DashboardPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to fetch invoices', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   }, [page, selectedStatus, searchQuery, selectedDate]);
 
@@ -70,14 +74,14 @@ export const DashboardPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchInvoices();
+    fetchInvoices(false);
   }, [fetchInvoices]);
 
-  // Polling every 5 seconds for live background queue updates
+  // Polling every 5 seconds for live background queue updates (silent in background)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchStats();
-      fetchInvoices();
+      fetchInvoices(true);
     }, 5000);
     return () => clearInterval(interval);
   }, [fetchInvoices]);

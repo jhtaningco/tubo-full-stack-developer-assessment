@@ -12,29 +12,34 @@ export const InvoiceDetailPage: React.FC = () => {
   const [retrying, setRetrying] = useState(false);
   const [actionMessage, setActionMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  const fetchInvoice = useCallback(async () => {
+  const fetchInvoice = useCallback(async (isSilent = false) => {
     if (!id) return;
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       const res = await api.get<Invoice>(`/api/invoices/${id}/`);
       setInvoice(res.data);
     } catch (err: any) {
       console.error('Failed to fetch invoice detail', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   }, [id]);
 
   useEffect(() => {
-    fetchInvoice();
+    fetchInvoice(false);
   }, [fetchInvoice]);
 
-  // Polling while in PENDING or PROCESSING state
+  // Polling while in PENDING or PROCESSING state (silent background refresh)
   useEffect(() => {
     if (!invoice || (invoice.status !== 'PENDING' && invoice.status !== 'PROCESSING')) {
       return;
     }
     const interval = setInterval(() => {
-      fetchInvoice();
+      fetchInvoice(true);
     }, 3000);
     return () => clearInterval(interval);
   }, [invoice, fetchInvoice]);
