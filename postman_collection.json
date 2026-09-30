@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Tubo E-Invoicing Platform API",
+    "description": "Complete REST API collection for Tubo Electronic Invoicing & Government Compliance Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Company & User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"ABC Hardware Store\",\n  \"company_tax_id\": \"123-456-789\",\n  \"company_email\": \"contact@abchardware.ph\",\n  \"email\": \"maria@abchardware.ph\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register", ""]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@abchardware.ph\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Current User Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Create Invoice (Async 202)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoice_number\": \"INV-10001\",\n  \"invoice_date\": \"2026-09-30\",\n  \"customer_name\": \"XYZ Construction Corp\",\n  \"customer_tax_id\": \"987-654-321\",\n  \"customer_email\": \"finance@xyz-construction.com\",\n  \"currency\": \"PHP\",\n  \"items\": [\n    {\n      \"description\": \"Deformed Steel Bar 10mm\",\n      \"quantity\": 100,\n      \"unit_price\": \"400.00\",\n      \"tax\": \"12.00\"\n    },\n    {\n      \"description\": \"Site Delivery & Handling\",\n      \"quantity\": 1,\n      \"unit_price\": \"2000.00\",\n      \"tax\": \"12.00\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", ""]
+            }
+          }
+        },
+        {
+          "name": "List Invoices (Filtered & Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/?page=1&status=SUBMITTED&search=XYZ",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", ""],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "status", "value": "SUBMITTED" },
+                { "key": "search", "value": "XYZ" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/stats/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "stats", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice Detail & Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/{{invoiceId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "{{invoiceId}}", ""]
+            }
+          }
+        },
+        {
+          "name": "Retry Failed Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/invoices/{{invoiceId}}/retry/",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "invoices", "{{invoiceId}}", "retry", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mock Government API",
+      "item": [
+        {
+          "name": "Submit to Mock Gov Portal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "test-key-001" },
+              { "key": "X-Mock-Force-Status", "value": "200" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoice_number\": \"INV-10001\",\n  \"customer_name\": \"XYZ Construction Corp\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mock-gov/invoices/",
+              "host": ["{{baseUrl}}"],
+              "path": ["mock-gov", "invoices", ""]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "invoiceId",
+      "value": ""
+    }
+  ]
+}
