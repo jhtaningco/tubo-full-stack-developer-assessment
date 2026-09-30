@@ -6,7 +6,6 @@ const config: Config = {
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
@@ -14,33 +13,25 @@ const config: Config = {
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
-        tubo: {
-          50: '#EEF2FF',
-          100: '#E0E7FF',
-          200: '#C7D2FE',
-          300: '#A5B4FC',
-          400: '#818CF8',
-          500: '#6366F1',
-          600: '#4F46E5',
-          700: '#4338CA',
-          800: '#3730A3',
-          900: '#312E81',
-          950: '#1E1B4B',
+        brand: {
+          50: '#EFF6FF',
+          100: '#DBEAFE',
+          200: '#BFDBFE',
+          300: '#93C5FD',
+          400: '#60A5FA',
+          500: '#3B82F6',
+          600: '#2563EB',
+          700: '#1D4ED8',
+          800: '#1E40AF',
+          900: '#1E3A8A',
+          950: '#172554',
         },
-        surface: {
-          darkest: '#070A11',
-          dark: '#0B0F19',
-          card: '#111827',
-          cardHover: '#161F32',
-          border: 'rgba(255, 255, 255, 0.08)',
-          borderSubtle: 'rgba(255, 255, 255, 0.04)',
-        }
       },
       boxShadow: {
-        'glow-indigo': '0 0 25px -5px rgba(99, 102, 241, 0.25)',
-        'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.25)',
-        'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.25)',
-        'card': '0 10px 30px -10px rgba(0, 0, 0, 0.5)',
+        'soft': '0 2px 10px -2px rgba(0, 0, 0, 0.05), 0 1px 3px -1px rgba(0, 0, 0, 0.03)',
+        'card': '0 4px 20px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -2px rgba(15, 23, 42, 0.03)',
+        'elevated': '0 10px 30px -5px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03)',
+        'glow-blue': '0 4px 20px -2px rgba(37, 99, 235, 0.25)',
       }
     },
   },
