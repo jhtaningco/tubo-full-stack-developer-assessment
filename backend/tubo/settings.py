@@ -159,5 +159,17 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Crash Recovery & Delivery Guarantees (Part I)
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
+# Periodic Sweeper Schedule for Abandoned Tasks
+CELERY_BEAT_SCHEDULE = {
+    'sweep-stale-processing-invoices': {
+        'task': 'apps.processing.tasks.sweep_stale_processing_invoices_task',
+        'schedule': 60.0,  # runs every 60 seconds
+    },
+}
+
 # Mock Gov API URL
-MOCK_GOV_API_URL = config('MOCK_GOV_API_URL', default='http://backend:8000/mock-gov/invoices')
+MOCK_GOV_API_URL = config('MOCK_GOV_API_URL', default='http://backend:8000/mock-gov/invoices/')

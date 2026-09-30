@@ -2,6 +2,7 @@ import json
 import logging
 import urllib.request
 import urllib.error
+from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
@@ -13,12 +14,13 @@ from .models import ProcessingLog
 logger = logging.getLogger(__name__)
 
 
-@shared_task(bind=True, max_retries=5)
+@shared_task(bind=True, max_retries=5, acks_late=True, reject_on_worker_lost=True)
 def submit_invoice_to_government_task(self, invoice_id, manual_retry=False):
     """
     Celery background task for asynchronous government invoice submission.
     
     Features:
+    - acks_late=True + reject_on_worker_lost=True: If worker dies mid-execution, task is preserved in queue
     - Row-level database locking (select_for_update) to prevent race conditions & double processing
     - Idempotency key transmission
     - Append-only processing audit log recording every single attempt
@@ -166,6 +168,8 @@ def submit_invoice_to_government_task(self, invoice_id, manual_retry=False):
 def handle_retry(task_instance, invoice, log, status_code, err_msg):
     """
     Helper function to record failure and calculate exponential backoff retry.
+    Note: Keeps status as PENDING during intermediate retries, and only transitions
+    to FAILED once all 5 retry attempts are exhausted.
     """
     new_retry_count = invoice.retry_count + 1
 
@@ -199,3 +203,56 @@ def handle_retry(task_instance, invoice, log, status_code, err_msg):
     logger.info(f"Scheduling retry #{new_retry_count + 1} for Invoice {invoice.invoice_number} in {countdown_seconds}s...")
 
     raise task_instance.retry(countdown=countdown_seconds)
+
+
+@shared_task
+def sweep_stale_processing_invoices_task(stale_threshold_minutes=2):
+    """
+    CRASH RECOVERY SWEEPER (Part I Requirement).
+    Runs periodically via Celery Beat every 60 seconds.
+    
+    If a Celery worker dies/crashes (OOM kill, hardware failure, unhandled crash)
+    while an invoice is in 'PROCESSING' state, this task detects rows that have been
+    abandoned without an update for > stale_threshold_minutes.
+    
+    Actions:
+    1. Locks candidate stale rows with select_for_update(skip_locked=True)
+    2. Appends a Crash Recovery audit log in ProcessingLog
+    3. Resets status to PENDING
+    4. Re-enqueues submit_invoice_to_government_task (idempotency key guarantees safety)
+    """
+    cutoff_time = timezone.now() - timedelta(minutes=stale_threshold_minutes)
+    
+    with transaction.atomic():
+        stale_invoices = list(
+            Invoice.objects.select_for_update(skip_locked=True).filter(
+                status=Invoice.Status.PROCESSING,
+                updated_at__lt=cutoff_time
+            )
+        )
+        
+        if not stale_invoices:
+            return {'recovered_count': 0}
+        
+        logger.warning(f"⚠️ [Crash Sweeper] Found {len(stale_invoices)} abandoned PROCESSING invoice(s). Initiating recovery.")
+
+        for inv in stale_invoices:
+            # Record crash recovery attempt in audit log
+            ProcessingLog.objects.create(
+                invoice=inv,
+                attempt_number=inv.retry_count + 1,
+                status=ProcessingLog.Status.FAILED,
+                error_message="System Worker Crash Detected: Invoice was abandoned in PROCESSING state. Automated crash sweeper initiated recovery.",
+                started_at=inv.updated_at,
+                ended_at=timezone.now()
+            )
+            
+            # Reset to PENDING
+            inv.status = Invoice.Status.PENDING
+            inv.save(update_fields=['status', 'updated_at'])
+            
+            # Re-enqueue submission task
+            submit_invoice_to_government_task.delay(str(inv.id))
+            logger.info(f"🔄 [Crash Sweeper] Re-enqueued Invoice {inv.invoice_number} ({inv.id}) for submission.")
+
+        return {'recovered_count': len(stale_invoices)}
