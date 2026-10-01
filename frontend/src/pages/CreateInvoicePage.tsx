@@ -141,11 +141,32 @@ export const CreateInvoicePage: React.FC = () => {
     ]);
   };
 
+  const fill503OutageInvoice = () => {
+    setInvoiceNumber(`INV-503-${Math.floor(10000 + Math.random() * 90000)}`);
+    setCustomerName('Manila Heavy Industries [503]');
+    setCustomerTaxId('888-222-111');
+    setCustomerEmail('procurement@manilaheavy.ph');
+    setItems([
+      { description: 'Hydraulic Excavator Cylinder Assembly', quantity: 2, unit_price: 18500, tax: 12 },
+      { description: 'High-Pressure Industrial Hose 50m', quantity: 4, unit_price: 3200, tax: 12 },
+    ]);
+  };
+
+  const fill400RejectInvoice = () => {
+    setInvoiceNumber(`INV-400-${Math.floor(10000 + Math.random() * 90000)}`);
+    setCustomerName('Invalid Corp [400]');
+    setCustomerTaxId('INVALID-TIN-999');
+    setCustomerEmail('tax-rejected@invalidcorp.ph');
+    setItems([
+      { description: 'Unregistered Restricted Chemical Drum', quantity: 1, unit_price: 9999, tax: 12 },
+    ]);
+  };
+
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Breadcrumb & Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
               <Link to="/" className="hover:text-blue-600 transition">Console</Link>
@@ -154,13 +175,34 @@ export const CreateInvoicePage: React.FC = () => {
             </div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Issue Electronic Invoice</h1>
           </div>
-          <button
-            type="button"
-            onClick={fillSampleInvoice}
-            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-xs font-bold text-blue-700 border border-slate-200 shadow-xs transition flex items-center gap-2 self-start sm:self-auto"
-          >
-            <span>⚡ Fill Sample Invoice</span>
-          </button>
+          
+          {/* Test Presets Group */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={fillSampleInvoice}
+              title="Pre-fills a standard compliant invoice (Clears with HTTP 200 OK)"
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-xs font-bold text-blue-700 border border-slate-200 shadow-xs transition flex items-center gap-1.5"
+            >
+              <span>⚡ Standard (200 OK)</span>
+            </button>
+            <button
+              type="button"
+              onClick={fill503OutageInvoice}
+              title="Simulates Gov Tax Portal Downtime (Triggers Celery Backoff Auto-Retry)"
+              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-xs font-bold text-amber-800 border border-amber-200 shadow-xs transition flex items-center gap-1.5"
+            >
+              <span>⚠️ Test 503 Outage</span>
+            </button>
+            <button
+              type="button"
+              onClick={fill400RejectInvoice}
+              title="Simulates Gov Tax TIN Validation Rejection (Permanent 400 REJECTED)"
+              className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-xs font-bold text-rose-800 border border-rose-200 shadow-xs transition flex items-center gap-1.5"
+            >
+              <span>🚫 Test 400 Reject</span>
+            </button>
+          </div>
         </div>
 
         {/* Error Alert */}
