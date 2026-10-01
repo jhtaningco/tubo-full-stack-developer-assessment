@@ -28,9 +28,24 @@ export interface InvoiceItem {
   line_total: string;
 }
 
+export type ProcessingLogStatus = 'PROCESSING' | 'SUCCESS' | 'FAILED';
+
+export interface ProcessingLog {
+  id: string;
+  invoice: string;
+  attempt_number: number;
+  status: ProcessingLogStatus;
+  http_status_code: number | null;
+  error_message: string | null;
+  started_at: string;
+  ended_at: string | null;
+}
+
 export interface Invoice {
   id: string;
   company: string;
+  company_name?: string;
+  company_tax_id?: string;
   invoice_number: string;
   invoice_date: string;
   customer_name: string;
@@ -46,19 +61,7 @@ export interface Invoice {
   created_at: string;
   updated_at: string;
   items: InvoiceItem[];
-}
-
-export type ProcessingLogStatus = 'PROCESSING' | 'SUCCESS' | 'FAILED';
-
-export interface ProcessingLog {
-  id: string;
-  invoice: string;
-  attempt_number: number;
-  status: ProcessingLogStatus;
-  http_status_code: number | null;
-  error_message: string | null;
-  started_at: string;
-  ended_at: string | null;
+  logs?: ProcessingLog[];
 }
 
 export interface PaginatedResponse<T> {

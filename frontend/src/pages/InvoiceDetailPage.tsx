@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import StatusBadge from '../components/ui/StatusBadge';
 import api from '../lib/api';
-import { Invoice } from '../types';
+import { Invoice, ProcessingLog } from '../types';
 
 export const InvoiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -274,7 +274,7 @@ export const InvoiceDetailPage: React.FC = () => {
 
           {invoice.logs && invoice.logs.length > 0 ? (
             <div className="space-y-4">
-              {invoice.logs.map((log, idx) => (
+              {invoice.logs.map((log: ProcessingLog, idx: number) => (
                 <div
                   key={log.id || idx}
                   className="p-4 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-2 hover:border-slate-300 transition"
