@@ -43,6 +43,15 @@ class InvoiceListCreateView(APIView):
         if status_param and status_param.upper() in Invoice.Status.values:
             queryset = queryset.filter(status=status_param.upper())
 
+        # Date filters (Supports exact date as well as start_date / end_date ranges)
+        start_date = self.request.query_params.get('start_date')
+        if start_date:
+            queryset = queryset.filter(invoice_date__gte=start_date)
+
+        end_date = self.request.query_params.get('end_date')
+        if end_date:
+            queryset = queryset.filter(invoice_date__lte=end_date)
+
         date_param = self.request.query_params.get('invoice_date')
         if date_param:
             queryset = queryset.filter(invoice_date=date_param)

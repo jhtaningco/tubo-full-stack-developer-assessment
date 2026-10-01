@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import StatusBadge from '../components/ui/StatusBadge';
+import DateRangeFilter, { DatePreset } from '../components/ui/DateRangeFilter';
 import api from '../lib/api';
 import { Invoice, PaginatedResponse } from '../types';
 
@@ -32,7 +33,9 @@ export const DashboardPage: React.FC = () => {
   // Filters
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [datePreset, setDatePreset] = useState<DatePreset>('ALL');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [lastSync, setLastSync] = useState<string>('Just now');
 
   const fetchStats = async () => {
@@ -53,7 +56,8 @@ export const DashboardPage: React.FC = () => {
       params.append('page', page.toString());
       if (selectedStatus) params.append('status', selectedStatus);
       if (searchQuery) params.append('search', searchQuery);
-      if (selectedDate) params.append('invoice_date', selectedDate);
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
 
       const res = await api.get<PaginatedResponse<Invoice>>(`/api/invoices/?${params.toString()}`);
       setInvoices(res.data.results);
@@ -67,7 +71,7 @@ export const DashboardPage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [page, selectedStatus, searchQuery, selectedDate]);
+  }, [page, selectedStatus, searchQuery, startDate, endDate]);
 
   useEffect(() => {
     fetchStats();
@@ -238,31 +242,39 @@ export const DashboardPage: React.FC = () => {
               </select>
             </div>
 
-            {/* Date Picker */}
-            <div className="w-full sm:w-44">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  setPage(1);
-                }}
-                className="w-full px-3.5 py-2 bg-slate-50/50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              />
-            </div>
+            {/* Modern Date Range Filter */}
+            <DateRangeFilter
+              preset={datePreset}
+              startDate={startDate}
+              endDate={endDate}
+              onApply={(preset, start, end) => {
+                setDatePreset(preset);
+                setStartDate(start);
+                setEndDate(end);
+                setPage(1);
+              }}
+              onClear={() => {
+                setDatePreset('ALL');
+                setStartDate('');
+                setEndDate('');
+                setPage(1);
+              }}
+            />
           </div>
 
-          {(selectedStatus || searchQuery || selectedDate) && (
+          {(selectedStatus || searchQuery || startDate || endDate || datePreset !== 'ALL') && (
             <button
               onClick={() => {
                 setSelectedStatus('');
                 setSearchQuery('');
-                setSelectedDate('');
+                setDatePreset('ALL');
+                setStartDate('');
+                setEndDate('');
                 setPage(1);
               }}
-              className="text-xs text-blue-600 hover:text-blue-700 font-bold px-2 py-1 transition whitespace-nowrap"
+              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs text-slate-700 hover:text-slate-900 font-bold transition flex items-center gap-1.5 self-start sm:self-auto shrink-0 shadow-xs"
             >
-              Reset Filters
+              <span>✕ Reset Filters</span>
             </button>
           )}
         </div>
@@ -300,7 +312,7 @@ export const DashboardPage: React.FC = () => {
                       </div>
                       <div className="font-bold text-slate-800 text-sm">No invoices found</div>
                       <div className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                        {searchQuery || selectedStatus || selectedDate
+                        {searchQuery || selectedStatus || startDate || endDate || datePreset !== 'ALL'
                           ? 'No matching records for current filter parameters.'
                           : 'You haven’t issued any electronic invoices yet.'}
                       </div>
