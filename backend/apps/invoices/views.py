@@ -141,11 +141,20 @@ class InvoiceRetryView(APIView):
 
         invoice = get_object_or_404(Invoice, id=id, company=request.user.company)
 
-        # Eligibility check
-        if invoice.status not in [Invoice.Status.FAILED, Invoice.Status.REJECTED]:
+        # Eligibility check: Only FAILED invoices (transient errors exhausted) are eligible for retry.
+        # REJECTED invoices (validation errors) require issuing a corrected invoice.
+        if invoice.status == Invoice.Status.REJECTED:
             return Response(
                 {
-                    'detail': f"Invoice is currently in '{invoice.status}' state and is not eligible for manual retry. Only FAILED or REJECTED invoices can be retried."
+                    'detail': 'This invoice was permanently rejected by the Tax Authority due to validation errors. Under electronic invoicing compliance rules, rejected records are immutable. Please issue a new corrected invoice.'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if invoice.status != Invoice.Status.FAILED:
+            return Response(
+                {
+                    'detail': f"Invoice is currently in '{invoice.status}' state and is not eligible for manual retry. Only FAILED invoices can be retried."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )

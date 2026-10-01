@@ -230,6 +230,23 @@ class InvoiceApiTests(TestCase):
         res = self.client.post(f'/api/invoices/{inv_submitted.id}/retry/')
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+        # Invoice rejected cannot be retried
+        inv_rejected = Invoice.objects.create(
+            company=self.company_a,
+            invoice_number='INV-REJECTED',
+            invoice_date='2026-10-01',
+            customer_name='Cust',
+            customer_tax_id='INVALID-TIN',
+            customer_email='c@test.com',
+            subtotal=Decimal('100.00'),
+            tax_amount=Decimal('12.00'),
+            total_amount=Decimal('112.00'),
+            status=Invoice.Status.REJECTED,
+            idempotency_key='rej_1'
+        )
+        res_rej = self.client.post(f'/api/invoices/{inv_rejected.id}/retry/')
+        self.assertEqual(res_rej.status_code, status.HTTP_400_BAD_REQUEST)
+
         # Invoice failed CAN be retried
         inv_failed = Invoice.objects.create(
             company=self.company_a,

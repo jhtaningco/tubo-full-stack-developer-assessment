@@ -94,7 +94,7 @@ export const InvoiceDetailPage: React.FC = () => {
     );
   }
 
-  const isEligibleForRetry = invoice.status === 'FAILED' || invoice.status === 'REJECTED';
+  const isEligibleForRetry = invoice.status === 'FAILED';
 
   return (
     <AppLayout>
@@ -121,7 +121,7 @@ export const InvoiceDetailPage: React.FC = () => {
               ← Back to Console
             </Link>
 
-            {/* Retry Action Button */}
+            {/* Retry Action Button (Strictly for FAILED state after transient backoff retries exhausted) */}
             {isEligibleForRetry && (
               <button
                 onClick={handleRetry}
@@ -138,8 +138,44 @@ export const InvoiceDetailPage: React.FC = () => {
                 <span>Retry Gov Submission</span>
               </button>
             )}
+
+            {/* If REJECTED -> Offer Quick Corrected Invoice Creation */}
+            {invoice.status === 'REJECTED' && (
+              <Link
+                to="/invoices/new"
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition flex items-center gap-1.5"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Issue Corrected Invoice</span>
+              </Link>
+            )}
           </div>
         </div>
+
+        {/* REJECTED Compliance Guidance Banner */}
+        {invoice.status === 'REJECTED' && (
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <div className="font-bold text-amber-950">Invoice Permanently Rejected by Tax Registry</div>
+                <div className="text-amber-800 mt-0.5">
+                  This invoice was rejected due to validation errors (e.g. invalid Customer TIN). Under electronic invoicing compliance rules, rejected records are immutable and cannot be edited. Please issue a new corrected invoice.
+                </div>
+              </div>
+            </div>
+            <Link
+              to="/invoices/new"
+              className="px-3.5 py-2 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shrink-0 self-start sm:self-auto transition shadow-xs"
+            >
+              + Issue New Invoice
+            </Link>
+          </div>
+        )}
 
         {/* Action Banner */}
         {actionMessage && (
