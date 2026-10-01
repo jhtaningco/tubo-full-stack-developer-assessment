@@ -170,9 +170,9 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
         </div>
       </button>
 
-      {/* Popover Menu */}
+      {/* Popover Menu - Anchored right to prevent screen overflow */}
       {isOpen && (
-        <div className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-80 p-4 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-4">
+        <div className="absolute right-0 mt-2 w-80 p-4 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
               <span>Filter Invoices by Date</span>
